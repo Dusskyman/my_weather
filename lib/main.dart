@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_weather/pages/map_page/map_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,30 +11,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: MyHomePage(),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({
-    super.key,
-  });
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-        ),
-      ),
+      home: MapPage(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
