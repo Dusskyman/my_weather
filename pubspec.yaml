@@ -23,6 +23,7 @@ dependencies:
   geolocator: ^10.1.0
   google_places_flutter: ^2.0.6
   auto_route: ^6.1.0
+  intl: ^0.18.1
 
   
   

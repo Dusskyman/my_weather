@@ -2,7 +2,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geocoding/geocoding.dart' as GeoCoding;
-import 'package:my_weather/cubit/weather_map_state.dart';
+import 'package:my_weather/cubit/weather_map_cubit/weather_map_state.dart';
+
 import 'package:my_weather/models/map_weather_model.dart';
 import 'package:weather/weather.dart';
 
@@ -51,7 +52,12 @@ class WeatherMapCubit extends Cubit<WeatherMapState> {
     );
   }
 
-  String _formatTemp(String temp) => temp.replaceFirst(' Celsius', '°C');
+  String _formatTemp(String temp) {
+    if (temp.contains('-')) {
+      temp.replaceFirst(' Celsius', '°');
+    }
+    return '+${temp.replaceFirst(' Celsius', '°')}';
+  }
 
   String _createUrlFromCode(String code) =>
       'https://openweathermap.org/img/wn/$code@2x.png';

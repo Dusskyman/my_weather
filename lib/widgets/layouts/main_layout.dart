@@ -1,7 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:my_weather/config/app_router.dart';
-import 'package:my_weather/pages/search_page/search_page.dart';
 
 class MainLayout extends StatelessWidget {
   final Widget body;

@@ -1,12 +1,13 @@
-import 'dart:math';
-
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:my_weather/config/app_router.dart';
 import 'package:my_weather/consts/app_consts.dart';
-import 'package:my_weather/cubit/weather_map_cubit.dart';
-import 'package:my_weather/cubit/weather_map_state.dart';
+import 'package:my_weather/cubit/weather_map_cubit/weather_map_cubit.dart';
+import 'package:my_weather/cubit/weather_map_cubit/weather_map_state.dart';
+import 'package:my_weather/cubit/weather_search_cubit.dart/weather_search_cubit.dart';
+
 import 'package:my_weather/models/map_weather_model.dart';
 import 'package:my_weather/widgets/layouts/main_layout.dart';
 import 'package:latlong2/latlong.dart';
@@ -56,7 +57,22 @@ class _MapPageState extends State<MapPage> {
                         if (state is WeatherMapMarked)
                           MarkerLayer(
                             markers: [
-                              _buildMarkes(state.mapWeatherModel),
+                              _buildMarkes(
+                                state.mapWeatherModel,
+                                () {
+                                  context
+                                      .read<WeatherSearchCubit>()
+                                      .getWeaterForecast(
+                                        '${state.mapWeatherModel.contry}, ${state.mapWeatherModel.localy}',
+                                      );
+                                  context.navigateTo(
+                                    SearchRoute(
+                                      city:
+                                          '${state.mapWeatherModel.contry}, ${state.mapWeatherModel.localy}',
+                                    ),
+                                  );
+                                },
+                              ),
                             ],
                           ),
                       ],
@@ -86,7 +102,7 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  Marker _buildMarkes(MapWeatherModel model) {
+  Marker _buildMarkes(MapWeatherModel model, Function() onTap) {
     return Marker(
       point: model.point,
       height: 125.0,
@@ -98,44 +114,47 @@ class _MapPageState extends State<MapPage> {
         children: [
           Visibility(
             visible: showHint,
-            child: Container(
-              padding: const EdgeInsets.all(8.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16.0),
-              ),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 50.0,
-                    height: 50.0,
-                    child: Image.network(
-                      model.imageUrl,
-                      fit: BoxFit.contain,
+            child: InkWell(
+              onTap: onTap,
+              child: Container(
+                padding: const EdgeInsets.all(8.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16.0),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 50.0,
+                      height: 50.0,
+                      child: Image.network(
+                        model.imageUrl,
+                        fit: BoxFit.contain,
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          model.temp,
-                          style: const TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            model.temp,
+                            style: const TextStyle(
+                              fontSize: 18.0,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        Text(
-                          model.localy.isNotEmpty
-                              ? '${model.contry}, ${model.localy}'
-                              : model.contry,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 18.0),
-                        ),
-                      ],
+                          Text(
+                            model.localy.isNotEmpty
+                                ? '${model.contry}, ${model.localy}'
+                                : model.contry,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 18.0),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
