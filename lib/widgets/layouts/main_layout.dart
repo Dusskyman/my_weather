@@ -1,4 +1,7 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:my_weather/config/app_router.dart';
+import 'package:my_weather/pages/search_page/search_page.dart';
 
 class MainLayout extends StatelessWidget {
   final Widget body;
@@ -14,54 +17,122 @@ class MainLayout extends StatelessWidget {
       body: Column(
         children: [
           Expanded(child: body),
-          bottomBar(),
+          Row(
+            children: [
+              _bottomButton(
+                name: 'Map',
+                onTap: () => context.navigateTo(const MapRoute()),
+                isSelected: context.router.currentPath == '/map-route',
+                iconData: Icons.map_outlined,
+              ),
+              _bottomButton(
+                name: 'Search',
+                onTap: () => context.navigateTo(SearchRoute()),
+                isSelected: context.router.currentPath == '/search-route',
+                iconData: Icons.search,
+              ),
+            ],
+          )
         ],
       ),
     );
   }
 
-  Widget bottomBar() {
+  Widget bottomBar(BuildContext context) {
     return Row(
       children: [
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(
-                  Icons.map_outlined,
-                  color: Colors.black,
+          child: IgnorePointer(
+            ignoring: context.router.currentPath == '/map-route',
+            child: InkWell(
+              onTap: () {
+                context.navigateTo(const MapRoute());
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(
+                      Icons.map_outlined,
+                      color: Colors.black,
+                    ),
+                    SizedBox(width: 4.0),
+                    Text(
+                      'Map',
+                      style: TextStyle(fontSize: 16.0),
+                    ),
+                  ],
                 ),
-                SizedBox(width: 4.0),
-                Text(
-                  'Map',
-                  style: TextStyle(fontSize: 16.0),
-                ),
-              ],
+              ),
             ),
           ),
         ),
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(
-                  Icons.search,
-                  color: Colors.black,
+          child: IgnorePointer(
+            ignoring: context.router.currentPath == '/search-route',
+            child: InkWell(
+              onTap: () {
+                context.navigateTo(SearchRoute());
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(
+                      Icons.search,
+                      color: Colors.black,
+                    ),
+                    SizedBox(width: 4.0),
+                    Text(
+                      'Search',
+                      style: TextStyle(fontSize: 16.0),
+                    ),
+                  ],
                 ),
-                SizedBox(width: 4.0),
-                Text(
-                  'Search',
-                  style: TextStyle(fontSize: 16.0),
-                ),
-              ],
+              ),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _bottomButton({
+    required String name,
+    required Function() onTap,
+    required bool isSelected,
+    required IconData iconData,
+  }) {
+    return Expanded(
+      child: IgnorePointer(
+        ignoring: isSelected,
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            color: isSelected ? Colors.black : Colors.white,
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  iconData,
+                  color: isSelected ? Colors.white : Colors.black,
+                ),
+                const SizedBox(width: 4.0),
+                Text(
+                  name,
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    color: isSelected ? Colors.white : Colors.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

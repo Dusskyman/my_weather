@@ -20,6 +20,10 @@ dependencies:
   flutter_map: ^4.0.0
   geocoding: ^2.1.1
   weather: ^3.0.0
+  geolocator: ^10.1.0
+  google_places_flutter: ^2.0.6
+  auto_route: ^6.1.0
+
   
   
   
@@ -27,8 +31,11 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
+    
+  auto_route_generator: ^6.1.0
+  build_runner: ^2.3.3
   flutter_lints: ^2.0.0
+
 
 flutter:
 

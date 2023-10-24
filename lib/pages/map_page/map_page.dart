@@ -1,11 +1,17 @@
 import 'dart:math';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:geocoding/geocoding.dart' as GeoCoding;
+import 'package:my_weather/consts/app_consts.dart';
+import 'package:my_weather/cubit/weather_map_cubit.dart';
+import 'package:my_weather/cubit/weather_map_state.dart';
+import 'package:my_weather/models/map_weather_model.dart';
 import 'package:my_weather/widgets/layouts/main_layout.dart';
 import 'package:latlong2/latlong.dart';
 
+@RoutePage()
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
 
@@ -14,68 +20,137 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
-  LatLng markerPoint = LatLng(0.0, 0.0);
   bool showHint = false;
-
-  ///TODO: Remove GeoCoding and add it's logic to bloc, add geolocator, refactor widget to method/file.
 
   @override
   Widget build(BuildContext context) {
     return MainLayout(
-      body: Column(
-        children: [
-          Expanded(
-            child: Stack(
-              children: [
-                FlutterMap(
-                  options: MapOptions(
-                    onTap: (tapPosition, point) => _removeMarker(),
-
-                    ///TODO: Just for testing remove any async onTap after bloc will be added
-                    onLongPress: (tapPosition, point) async {
-                      markerPoint = point;
-                      final placeMarks =
-                          await GeoCoding.placemarkFromCoordinates(
-                        point.latitude,
-                        point.longitude,
-                        localeIdentifier: 'en',
-                      );
-                      setState(() {});
-                    },
-
-                    ///TODO: Change to actual geolocation
-                    center: LatLng(
-                      48.383022,
-                      31.1828699,
-                    ),
-                    zoom: 15.0,
-                  ),
+      body: BlocBuilder<WeatherMapCubit, WeatherMapState>(
+        builder: (context, state) {
+          if (state is WeatherMapLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+          return Column(
+            children: [
+              Expanded(
+                child: Stack(
                   children: [
-                    TileLayer(
-                      urlTemplate:
-                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    ),
-                    MarkerLayer(
-                      markers: [
-                        _buildMarkes(),
+                    FlutterMap(
+                      options: MapOptions(
+                        onTap: (tapPosition, point) => _removeMarker(),
+                        onLongPress: (tapPosition, point) {
+                          showHint = false;
+                          context
+                              .read<WeatherMapCubit>()
+                              .getWeaterWithPoint(point);
+                        },
+                        center: state is WeatherMapIdle ? state.latLng : null,
+                        zoom: 15.0,
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate: AppConsts.mapUrl,
+                        ),
+                        if (state is WeatherMapMarked)
+                          MarkerLayer(
+                            markers: [
+                              _buildMarkes(state.mapWeatherModel),
+                            ],
+                          ),
                       ],
                     ),
+                    const SafeArea(
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 16.0),
+                          child: Text(
+                            'Location',
+                            style: TextStyle(
+                              fontSize: 24.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
                   ],
                 ),
-                const SafeArea(
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: Padding(
-                      padding: EdgeInsets.only(top: 16.0),
-                      child: Text(
-                        'Location',
-                        style: TextStyle(
-                            fontSize: 24.0, fontWeight: FontWeight.bold),
-                      ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Marker _buildMarkes(MapWeatherModel model) {
+    return Marker(
+      point: model.point,
+      height: 125.0,
+      width: 250.0,
+      anchorPos: AnchorPos.align(AnchorAlign.top),
+      rotate: true,
+      builder: (context) => Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Visibility(
+            visible: showHint,
+            child: Container(
+              padding: const EdgeInsets.all(8.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 50.0,
+                    height: 50.0,
+                    child: Image.network(
+                      model.imageUrl,
+                      fit: BoxFit.contain,
                     ),
                   ),
-                )
-              ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          model.temp,
+                          style: const TextStyle(
+                            fontSize: 18.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          model.localy.isNotEmpty
+                              ? '${model.contry}, ${model.localy}'
+                              : model.contry,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 18.0),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          InkWell(
+            onTap: () {
+              showHint = true;
+              setState(() {});
+            },
+            child: Transform.rotate(
+              angle: pi,
+              child: const Icon(
+                Icons.navigation,
+                color: Colors.black,
+                size: 50.0,
+              ),
             ),
           ),
         ],
@@ -83,60 +158,8 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  Marker _buildMarkes() {
-    if (markerPoint.latitude != 0.0 && markerPoint.longitude != 0.0) {
-      return Marker(
-        point: markerPoint,
-        height: 125.0,
-        width: 250.0,
-        anchorPos: AnchorPos.align(AnchorAlign.top),
-        builder: (context) => Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Visibility(
-              visible: showHint,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: const [
-                    Icon(Icons.sunny),
-                    Text(
-                      'Text, Text,',
-                      style: TextStyle(
-                        fontSize: 18.0,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            InkWell(
-              onTap: () {
-                showHint = true;
-                setState(() {});
-              },
-              child: Transform.rotate(
-                angle: pi,
-                child: const Icon(
-                  Icons.navigation,
-                  color: Colors.black,
-                  size: 50.0,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-    return Marker(
-      point: markerPoint,
-      builder: (context) => const SizedBox(),
-    );
-  }
-
   void _removeMarker() {
-    markerPoint = LatLng(0.0, 0.0);
     showHint = false;
-    setState(() {});
+    context.read<WeatherMapCubit>().removeMark();
   }
 }
